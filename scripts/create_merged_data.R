@@ -141,9 +141,11 @@ format_multi_ensembl_ids <- function(ids) {
 separate_ensembl_field <- function(df) {
   tx_pattern <- "^([^_]+_[^_,]+)(,[^_]+_[^_,]+)*_[^_]+_(chr)*\\w+_\\d+_\\d+_[-+]_utr_\\d+_\\d+"
   if (grepl(tx_pattern, df$Transcript[1], perl = TRUE)) {
+    # Replace _PAR_Y suffix of gene IDs if applicable - since split by '_', need to replace first to avoid a parsing error (but still retain distinct ID)
     # Format Ensembl Transcript and Ensembl Gene IDs if there are multiple
     # Remove utr tag
-    df[, Transcript := str_extract(Transcript, tx_pattern) %>%
+    df[, Transcript := str_replace_all(Transcript , "_PAR_Y", ".PARY") %>%
+           str_extract(tx_pattern) %>%
            format_multi_ensembl_ids() %>%
            #str_replace("_(hg\\d+|mm\\d+|unk)", "") %>%
            str_replace("_utr", "")]
