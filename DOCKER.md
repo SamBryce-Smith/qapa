@@ -156,6 +156,13 @@ The repository includes a GitHub Actions workflow that automatically:
 
 1. Generates the conda-lock file
 2. Builds the Docker image
-3. Publishes to GitHub Container Registry on releases
+3. Runs comprehensive tests (Python and R test suites)
+4. Publishes to GitHub Container Registry
+
+The workflow triggers on:
+- **Release published**: Automatically builds and publishes when a new release is created
+- **Manual dispatch**: Can be triggered manually from the Actions tab in GitHub
+
+On manual dispatch, the workflow will also commit the generated `conda-lock.yml` back to the repository if it has changed.
 
 See `.github/workflows/docker-publish.yml` for details.

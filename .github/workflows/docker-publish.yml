@@ -1,15 +1,6 @@
 name: Build and Publish Docker Image
 
 on:
-  push:
-    branches:
-      - main
-      - master
-      - 'claude/**'
-  pull_request:
-    branches:
-      - main
-      - master
   release:
     types: [published]
   workflow_dispatch:
@@ -163,7 +154,7 @@ jobs:
     name: Commit conda-lock.yml to repository
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/claude/'))
+    if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
 
