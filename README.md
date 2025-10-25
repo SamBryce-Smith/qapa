@@ -42,15 +42,15 @@ QAPA is also available as a Docker image from the GitHub Container Registry. Thi
 
 1. Pull the latest image:
 
-        docker pull ghcr.io/morrislab/qapa:latest
+        docker pull ghcr.io/sambryce-smith/qapa:latest
 
 2. Run QAPA commands via Docker:
 
-        docker run --rm ghcr.io/morrislab/qapa:latest --help
+        docker run --rm ghcr.io/sambryce-smith/qapa:latest --help
 
 3. Mount your data directory to work with local files:
 
-        docker run --rm -v $(pwd)/data:/data ghcr.io/morrislab/qapa:latest build --help
+        docker run --rm -v $(pwd)/data:/data ghcr.io/sambryce-smith/qapa:latest build --help
 
 For detailed Docker usage instructions, including building the image from source, see [DOCKER.md](DOCKER.md).
 

@@ -49,5 +49,5 @@ CMD ["--help"]
 LABEL org.opencontainers.image.title="qapa" \
       org.opencontainers.image.description="RNA-seq Quantification of Alternative PolyAdenylation" \
       org.opencontainers.image.version="1.4.0" \
-      org.opencontainers.image.source="https://github.com/morrislab/qapa" \
+      org.opencontainers.image.source="https://github.com/SamBryce-Smith/qapa" \
       org.opencontainers.image.licenses="GPL-3.0"

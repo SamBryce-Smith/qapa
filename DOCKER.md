@@ -94,13 +94,13 @@ Once published, you can pull the image from GitHub Container Registry:
 
 ```bash
 # Pull the latest image
-docker pull ghcr.io/morrislab/qapa:latest
+docker pull ghcr.io/sambryce-smith/qapa:latest
 
 # Pull a specific version
-docker pull ghcr.io/morrislab/qapa:v1.4.0
+docker pull ghcr.io/sambryce-smith/qapa:v1.4.0
 
 # Use in your workflow
-docker run --rm ghcr.io/morrislab/qapa:latest --help
+docker run --rm ghcr.io/sambryce-smith/qapa:latest --help
 ```
 
 ## Development
