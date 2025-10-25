@@ -46,9 +46,10 @@ Thumbs.db
 *.md
 docs/
 
-# Examples and tests (optional, remove if needed in container)
+# Examples (can be large, exclude to reduce image size)
 examples/
-tests/
+
+# Tests are included for validation
 
 # CI/CD (not needed in container)
 .travis.yml
