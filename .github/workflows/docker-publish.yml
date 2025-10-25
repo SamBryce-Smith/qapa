@@ -1,0 +1,189 @@
+name: Build and Publish Docker Image
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - 'claude/**'
+  pull_request:
+    branches:
+      - main
+      - master
+  release:
+    types: [published]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  generate-lockfile:
+    name: Generate conda-lock file
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install conda-lock
+        run: |
+          pip install conda-lock
+
+      - name: Install micromamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          micromamba-version: 'latest'
+          environment-name: 'lockfile-gen'
+          init-shell: bash
+          cache-downloads: true
+
+      - name: Generate conda-lock.yml
+        run: |
+          conda-lock lock \
+            --file environment.yml \
+            --platform linux-64 \
+            --lockfile conda-lock.yml
+
+      - name: Upload conda-lock.yml artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: conda-lock
+          path: conda-lock.yml
+          retention-days: 7
+
+  build-and-test:
+    name: Build and test Docker image
+    needs: generate-lockfile
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download conda-lock.yml
+        uses: actions/download-artifact@v4
+        with:
+          name: conda-lock
+          path: .
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          load: true
+          tags: qapa:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test Docker image - Basic functionality
+        run: |
+          echo "Testing qapa --version"
+          docker run --rm qapa:test --version
+
+          echo "Testing qapa --help"
+          docker run --rm qapa:test --help
+
+          echo "Testing qapa build --help"
+          docker run --rm qapa:test build --help
+
+          echo "Testing qapa fasta --help"
+          docker run --rm qapa:test fasta --help
+
+          echo "Testing qapa quant --help"
+          docker run --rm qapa:test quant --help
+
+      - name: Test Docker image - Python and R availability
+        run: |
+          echo "Testing Python version"
+          docker run --rm qapa:test python --version
+
+          echo "Testing R version"
+          docker run --rm --entrypoint R qapa:test --version
+
+          echo "Testing bedtools"
+          docker run --rm --entrypoint bedtools qapa:test --version
+
+      - name: Build and push Docker image
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  commit-lockfile:
+    name: Commit conda-lock.yml to repository
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/claude/'))
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download conda-lock.yml
+        uses: actions/download-artifact@v4
+        with:
+          name: conda-lock
+          path: .
+
+      - name: Check if conda-lock.yml changed
+        id: check-changes
+        run: |
+          if git diff --quiet conda-lock.yml 2>/dev/null; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push conda-lock.yml
+        if: steps.check-changes.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add conda-lock.yml
+          git commit -m "chore: update conda-lock.yml [skip ci]"
+          git push

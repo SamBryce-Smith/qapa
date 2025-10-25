@@ -35,6 +35,25 @@ can be created using the provided `environment.yml` file.
 4. Test that `qapa` command is available
 
         qapa --help
+
+### Docker Installation
+
+QAPA is also available as a Docker image from the GitHub Container Registry. This provides a reproducible environment with all dependencies pre-installed.
+
+1. Pull the latest image:
+
+        docker pull ghcr.io/morrislab/qapa:latest
+
+2. Run QAPA commands via Docker:
+
+        docker run --rm ghcr.io/morrislab/qapa:latest --help
+
+3. Mount your data directory to work with local files:
+
+        docker run --rm -v $(pwd)/data:/data ghcr.io/morrislab/qapa:latest build --help
+
+For detailed Docker usage instructions, including building the image from source, see [DOCKER.md](DOCKER.md).
+
 ---
 
 # Usage
