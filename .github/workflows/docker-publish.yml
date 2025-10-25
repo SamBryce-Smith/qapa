@@ -130,7 +130,7 @@ jobs:
       - name: Test Docker image - Python and R availability
         run: |
           echo "Testing Python version"
-          docker run --rm qapa:test python --version
+          docker run --rm --entrypoint python qapa:test --version
 
           echo "Testing R version"
           docker run --rm --entrypoint R qapa:test --version
