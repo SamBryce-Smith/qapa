@@ -20,8 +20,9 @@ if ! command -v conda-lock &> /dev/null; then
 fi
 
 # Generate lock file for linux-64 (Docker/CI platform)
+# Note: Using environment-lock.yml which excludes the local pip install
 conda-lock lock \
-    --file environment.yml \
+    --file environment-lock.yml \
     --platform linux-64 \
     --lockfile conda-lock.yml
 

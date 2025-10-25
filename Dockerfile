@@ -8,16 +8,13 @@ FROM mambaorg/micromamba:1.5.10 AS build
 WORKDIR /tmp/build
 
 # Copy conda-lock file
-COPY conda-lock.yml /tmp/build/
+COPY conda-lock.yml /tmp/build/conda-lock.yml
 
-# Install conda-lock to enable installation from lockfile
-USER root
-RUN micromamba install -n base -c conda-forge conda-lock -y
-
-# Create environment from lockfile
-# Using explicit platform to ensure reproducibility
+# Create environment from lockfile using micromamba
+# micromamba can directly install from conda-lock files
 USER $MAMBA_USER
-RUN conda-lock install --name qapa /tmp/build/conda-lock.yml
+RUN micromamba create -n qapa --file /tmp/build/conda-lock.yml -y && \
+    micromamba clean --all --yes
 
 # Stage 2: Runtime image
 FROM mambaorg/micromamba:1.5.10

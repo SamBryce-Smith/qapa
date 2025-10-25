@@ -10,6 +10,8 @@ The Docker image uses conda-lock for reproducible builds. Before building, you n
 
 ### Step 1: Generate the Conda Lock File
 
+**Note:** The project uses `environment-lock.yml` (instead of `environment.yml`) for Docker builds. This file excludes the local package installation which is handled separately in the Dockerfile.
+
 **Option A: Using the provided script (requires conda-lock)**
 
 ```bash

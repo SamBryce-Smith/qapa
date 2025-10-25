@@ -46,7 +46,7 @@ jobs:
       - name: Generate conda-lock.yml
         run: |
           conda-lock lock \
-            --file environment.yml \
+            --file environment-lock.yml \
             --platform linux-64 \
             --lockfile conda-lock.yml
 
@@ -137,6 +137,16 @@ jobs:
 
           echo "Testing bedtools"
           docker run --rm --entrypoint bedtools qapa:test --version
+
+      - name: Test Docker image - Run Python tests
+        run: |
+          echo "Running Python test suite"
+          docker run --rm --entrypoint /bin/bash qapa:test -c "cd /app/tests && ./run_py_tests.sh"
+
+      - name: Test Docker image - Run R tests
+        run: |
+          echo "Running R test suite"
+          docker run --rm --entrypoint /bin/bash qapa:test -c "cd /app/tests && Rscript run_R_tests.R"
 
       - name: Build and push Docker image
         if: github.event_name != 'pull_request'
